@@ -602,7 +602,6 @@ class DocumentApp:
         self.db_manager = db_manager
 
     def open_settings_dialog(self):
-        # 設定ウィンドウを開く処理をここに記述
         pass
 
 if __name__ == "__main__":
@@ -619,8 +618,6 @@ if __name__ == "__main__":
         window.open_settings_dialog()  # 自社情報がなければ設定ウィンドウを開く
     window.show()
     sys.exit(app.exec_())
-
-#from db import DatabaseManager
 
 def save_company_info():
     db = DatabaseManager()
@@ -646,9 +643,6 @@ def save_company_info():
     # 保存した情報を取得して表示
     saved_info = db.get_company_info()
     print("保存された自社情報:", saved_info)
-
-import sqlite3
-import logging
 
 class DatabaseManager:
     def __init__(self, db_name="documents.db"):
@@ -769,6 +763,3 @@ class DatabaseManager:
             raise
         finally:
             self.close()
-
-if __name__ == "__main__":
-    save_company_info()
