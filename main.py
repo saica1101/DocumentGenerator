@@ -597,13 +597,6 @@ class MainWindow(QMainWindow):
         self.db_manager.close()
         self.close()
 
-class DocumentApp:
-    def __init__(self, db_manager):
-        self.db_manager = db_manager
-
-    def open_settings_dialog(self):
-        pass
-
 if __name__ == "__main__":
     db_manager = DatabaseManager()
     company_info = db_manager.get_company_info()
