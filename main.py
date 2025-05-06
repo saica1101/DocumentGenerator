@@ -272,6 +272,16 @@ class MainWindow(QMainWindow):
         selected_rows = table.selectionModel().selectedRows()
         for row in sorted(selected_rows, reverse=True):
             table.removeRow(row.row())
+    
+    def get_template_path(self, document_type):
+        # テンプレートファイルのパスを取得する関数
+        if getattr(sys, "frozen", False):
+            # .exe
+            base_path = os.path.dirname(sys.executable)
+        else:
+            # .py
+            base_path = os.path.dirname(__file__)
+        return base_path
 
     def generate_document(self, document_type="見積書"):
         # テーブルと入力フィールドの取得
@@ -300,7 +310,8 @@ class MainWindow(QMainWindow):
         else:
             raise ValueError(f"Unknown document type: {document_type}")
 
-        template_path = os.path.join(os.path.dirname(__file__), "Templates", f"{document_type}_テンプレート.xlsx")
+        template_path = self.get_template_path(document_type)
+        template_path = os.path.join(template_path, "Templates", f"{document_type}_テンプレート.xlsx")
         temp_dir = tempfile.mkdtemp()
         temp_file = os.path.join(temp_dir, f"{document_type}.xlsx")
         shutil.copy(template_path, temp_file)
@@ -325,7 +336,7 @@ class MainWindow(QMainWindow):
         sheet["A2"].value = company_name_field.text()
         sheet["A2"].alignment = Alignment(vertical="bottom", horizontal="center")
         if document_type in ["見積書", "請求書"]:
-            sheet["B5"].value = company_name_field.text()
+            sheet["B5"].value = subject_field.text()
             sheet["B5"].alignment = Alignment(vertical="center")
             sheet["B6"].value = QDate.currentDate().toString("yyyy/MM/dd")
             sheet["B6"].alignment = Alignment(vertical="center")
@@ -444,8 +455,7 @@ class MainWindow(QMainWindow):
         pdf_output_dir = os.path.dirname(temp_file)
         convert_sheet_to_pdf_with_libreoffice(temp_file, pdf_output_dir, document_type)
 
-        # PDFを指定のフォルダに移動
-        base_dir = os.path.dirname(os.path.abspath(__file__))
+        base_dir = self.get_template_path(document_type)
         sub_dir = "見積書" if document_type == "見積書" else ("請求書" if document_type == "請求書" else "領収書")
         company_dir = os.path.join(base_dir, sub_dir, company_name_field.text(), QDate.currentDate().toString('yyyy'), QDate.currentDate().toString('MM'))
         os.makedirs(company_dir, exist_ok=True)
