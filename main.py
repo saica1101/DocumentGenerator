@@ -326,23 +326,6 @@ class MainWindow(QMainWindow):
         selected_rows = table.selectionModel().selectedRows()
         for row in sorted(selected_rows, reverse=True):
             table.removeRow(row.row())
-    
-    def get_template_path(self, document_type):
-        """
-        テンプレートファイルのパスを取得する。
-        Args:
-            document_type (str): 書類の種類
-        Returns:
-            str: テンプレートファイルのパス
-        """
-        # テンプレートファイルのパスを取得する関数
-        if getattr(sys, "frozen", False):
-            # .exe
-            base_path = os.path.dirname(sys.executable)
-        else:
-            # .py
-            base_path = os.path.dirname(__file__)
-        return base_path
 
     def generate_document(self, document_type="見積書"):
         """
@@ -705,3 +688,156 @@ if __name__ == "__main__":
         window.open_settings_dialog()  # 自社情報がなければ設定ウィンドウを開く
     window.show()
     sys.exit(app.exec_())
+
+#from db import DatabaseManager
+
+def save_company_info():
+    db = DatabaseManager()
+
+    # 自社情報の入力例
+    company_info = {
+        "company_name": "株式会社サンプル",
+        "postal_code": "123-4567",
+        "address": "東京都新宿区",
+        "address_detail": "1-2-3 サンプルビル",
+        "phone_number": "03-1234-5678",
+        "contact_person": "山田 太郎",
+        "account_type": "普通",
+        "bank_branch": "新宿支店",
+        "account_number": "1234567",
+        "account_name": "カ）サンプル"
+    }
+
+    # データベースに保存
+    db.add_company_info(company_info)
+    print("自社情報を保存しました。")
+
+    # 保存した情報を取得して表示
+    saved_info = db.get_company_info()
+    print("保存された自社情報:", saved_info)
+
+import sqlite3
+import logging
+
+class DatabaseManager:
+    def __init__(self, db_name="documents.db"):
+        self.db_name = db_name
+        self.conn = None
+
+    def connect(self):
+        """データベースに接続し、カーソルを作成する"""
+        try:
+            self.conn = sqlite3.connect(self.db_name)
+            self.cursor = self.conn.cursor()
+            logging.info("Database connection established.")
+        except sqlite3.Error as e:
+            logging.error(f"Database connection error: {e}")
+            raise
+
+    def close(self):
+        """データベース接続を閉じる"""
+        if self.conn:
+            self.conn.close()
+            logging.info("Database connection closed.")
+
+    def create_table(self):
+        """テーブルを作成する"""
+        try:
+            self.connect()
+            self.cursor.execute('''
+                CREATE TABLE IF NOT EXISTS company_info (
+                    id INTEGER PRIMARY KEY,
+                    company_name TEXT,
+                    postal_code TEXT,
+                    address TEXT,
+                    address_detail TEXT,
+                    phone_number TEXT,
+                    contact_person TEXT,
+                    account_type TEXT,
+                    bank_branch TEXT,
+                    account_number TEXT,
+                    account_name TEXT
+                )
+            ''')
+            self.conn.commit()  # テーブル作成をコミット 
+            logging.info("Table 'company_info' created (if not exists).")
+        except sqlite3.Error as e:
+            logging.error(f"Table creation error: {e}")
+            raise
+        finally:
+            self.close()
+
+    def add_company_info(self, info):
+        """自社情報を追加する"""
+        try:
+            self.connect()
+            self.cursor.execute('''
+                INSERT INTO company_info (company_name, postal_code, address, address_detail,
+                                        phone_number, contact_person, account_type, bank_branch,
+                                        account_number, account_name)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (info.get("company_name"), info.get("postal_code"), info.get("address"),
+                  info.get("address_detail"), info.get("phone_number"), info.get("contact_person"),
+                  info.get("account_type"), info.get("bank_branch"), info.get("account_number"),
+                  info.get("account_name")))
+            self.conn.commit()  # データ追加をコミット 
+            logging.info("Company info added.")
+        except sqlite3.Error as e:
+            logging.error(f"Error adding company info: {e}")
+            raise
+        finally:
+            self.close()
+
+    def get_company_info(self):
+        """自社情報を取得する"""
+        try:
+            self.connect()
+            self.cursor.execute("SELECT * FROM company_info LIMIT 1")
+            row = self.cursor.fetchone()
+            if row:
+                columns = [column[0] for column in self.cursor.description]
+                return dict(zip(columns, row))
+            return None
+        except sqlite3.Error as e:
+            logging.error(f"Error getting company info: {e}")
+            raise
+        finally:
+            self.close()
+
+    def update_company_info(self, info):
+        """自社情報を更新する"""
+        try:
+            self.connect()
+            self.cursor.execute('''
+                UPDATE company_info SET
+                    company_name = ?, postal_code = ?, address = ?, address_detail = ?,
+                    phone_number = ?, contact_person = ?, account_type = ?, bank_branch = ?,
+                    account_number = ?, account_name = ?
+                WHERE id = 1
+            ''', (info.get("company_name"), info.get("postal_code"), info.get("address"),
+                  info.get("address_detail"), info.get("phone_number"), info.get("contact_person"),
+                  info.get("account_type"), info.get("bank_branch"), info.get("account_number"),
+                  info.get("account_name")))
+            self.conn.commit()  # データ更新をコミット 
+            logging.info("Company info updated.")
+        except sqlite3.Error as e:
+            logging.error(f"Error updating company info: {e}")
+            raise
+        finally:
+            self.close()
+
+    def delete_company_info(self):
+        """自社情報を削除する (通常は使用しない)"""
+        try:
+            self.connect()
+            self.cursor.execute("DELETE FROM company_info WHERE id = 1")
+            self.conn.commit()  # データ削除をコミット 
+            logging.warning("Company info deleted.")
+        except sqlite3.Error as e:
+            logging.error(f"Error deleting company info: {e}")
+            raise
+        finally:
+            self.close()
+
+if __name__ == "__main__":
+    save_company_info()
