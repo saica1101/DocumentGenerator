@@ -15,20 +15,14 @@ import sqlite3
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class DatabaseManager:
-    """
-    データベースの接続・操作を管理するクラス。
-    会社情報の取得・更新・削除などを行う。
-    """
     def __init__(self, db_name="documents.db"):
-        # データベースファイルのパスを絶対パスで指定
+        # データベースマネージャの初期化。データベースファイルのパスを設定。
         self.db_path = os.path.abspath(db_name)
         self.conn = None
         self.cursor = None
 
     def connect(self):
-        """
-        データベースへ接続し、テーブルがなければ作成する。
-        """
+        """データベースへ接続し、必要ならテーブルを作成する。"""
         try:
             # データベースファイルが存在しない場合は新規作成
             self.conn = sqlite3.connect(self.db_path)
@@ -57,9 +51,7 @@ class DatabaseManager:
             raise
 
     def close(self):
-        """
-        データベース接続を閉じる。
-        """
+        """データベース接続を安全に閉じる。"""
         try:
             if self.conn:
                 self.cursor.close()
@@ -71,11 +63,7 @@ class DatabaseManager:
             raise
 
     def get_company_info(self):
-        """
-        自社情報を取得する。
-        Returns:
-            dict or None: 会社情報の辞書、または存在しない場合はNone。
-        """
+        """自社情報をデータベースから取得し、辞書形式で返す。"""
         try:
             self.connect()
             self.cursor.execute("SELECT * FROM company_info WHERE id = 1")
@@ -94,11 +82,7 @@ class DatabaseManager:
             self.close()
 
     def update_company_info(self, info):
-        """
-        自社情報を更新または新規挿入する。
-        Args:
-            info (dict): 会社情報の辞書。
-        """
+        """自社情報をデータベースに更新または新規挿入する。"""
         try:
             self.connect()
             self.cursor.execute("SELECT * FROM company_info WHERE id = 1")  # id = 1 のレコードを検索 
@@ -137,9 +121,7 @@ class DatabaseManager:
             self.close()
 
     def delete_company_info(self):
-        """
-        自社情報を削除する（通常は使用しない）。
-        """
+        """自社情報をデータベースから削除する（通常は使用しない）。"""
         try:
             self.connect()
             self.cursor.execute("DELETE FROM company_info WHERE id = 1")
@@ -152,10 +134,8 @@ class DatabaseManager:
             self.close()
 
 class MainWindow(QMainWindow):
-    """
-    メインウィンドウクラス。各種画面やイベント処理を管理する。
-    """
     def __init__(self):
+        """メインウィンドウの初期化とUI構築。"""
         super().__init__()
         self.setWindowTitle("書類作成アプリケーション")
         self.setGeometry(100, 100, 640, 560)
@@ -169,9 +149,7 @@ class MainWindow(QMainWindow):
         self.remarks_text = ""
 
     def create_top_menu(self):
-        """
-        トップメニュー画面を作成し、スタックに追加する。
-        """
+        """トップメニュー画面を作成し、スタックに追加する。"""
         top_menu = QWidget()
         layout = QVBoxLayout()
         # ボタン作成
@@ -196,13 +174,7 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(top_menu)
 
     def create_document_screen(self, document_type):
-        """
-        書類作成画面（見積書・請求書・領収書）を生成する。
-        Args:
-            document_type (str): 書類の種類
-        Returns:
-            tuple: 画面ウィジェット、入力レイアウト、会社名フィールド、テーブル、生成ボタン
-        """
+        """見積書・請求書・領収書の入力画面を作成する。"""
         screen = QWidget()
         layout = QVBoxLayout()
         input_layout = QFormLayout()
@@ -230,9 +202,7 @@ class MainWindow(QMainWindow):
         return screen, input_layout, company_name_field, table, generate_button
 
     def create_estimate_screen(self):
-        """
-        見積書作成画面を初期化する。
-        """
+        """見積書作成画面を初期化し、スタックに追加する。"""
         self.estimate_screen, estimate_input_layout, self.estimate_company_name, self.estimate_table, generate_button = self.create_document_screen("見積書")
         self.estimate_subject = QLineEdit()
         self.estimate_expiry_date = QDateEdit()
@@ -251,9 +221,7 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.estimate_screen)
 
     def create_invoice_screen(self):
-        """
-        請求書作成画面を初期化する。
-        """
+        """請求書作成画面を初期化し、スタックに追加する。"""
         self.invoice_screen, invoice_input_layout, self.invoice_company_name, self.invoice_table, generate_button = self.create_document_screen("請求書")
         self.invoice_subject = QLineEdit()
         self.invoice_expiry_date = QDateEdit()
@@ -272,9 +240,7 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.invoice_screen)
 
     def create_receipt_screen(self):
-        """
-        領収書作成画面を初期化する。
-        """
+        """領収書作成画面を初期化し、スタックに追加する。"""
         self.receipt_screen, receipt_input_layout, self.receipt_company_name, self.receipt_table, generate_button = self.create_document_screen("領収書")
         self.receipt_period_duration = QDateEdit()
         self.receipt_period_duration.setCalendarPopup(True)
@@ -289,9 +255,7 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.receipt_screen)
 
     def open_remarks_dialog(self):
-        """
-        備考入力用のダイアログを開く。
-        """
+        """備考入力用のダイアログを表示する。"""
         dialog = QDialog(self)
         dialog.setWindowTitle("備考の入力")
         dialog_layout = QVBoxLayout()
@@ -305,34 +269,35 @@ class MainWindow(QMainWindow):
         dialog.exec_()
 
     def save_remarks(self, dialog, remarks_field):
-        """
-        備考欄の内容を保存する。
-        """
+        """備考ダイアログで入力された内容を保存する。"""
         self.remarks_text = remarks_field.toPlainText()
         dialog.accept()
 
     def add_table_row(self, table):
-        """
-        テーブルに新しい行を追加する。
-        """
+        """テーブルに新しい行を追加する。"""
         if isinstance(table, QTableWidget):
             row_position = table.rowCount()
             table.insertRow(row_position)
 
     def delete_table_row(self, table):
-        """
-        テーブルから選択した行を削除する。
-        """
+        """テーブルで選択された行を削除する。"""
         selected_rows = table.selectionModel().selectedRows()
         for row in sorted(selected_rows, reverse=True):
             table.removeRow(row.row())
+    
+    def get_template_path(self, document_type):
+        """テンプレートファイルのパスを取得する。"""
+        # テンプレートファイルのパスを取得する関数
+        if getattr(sys, "frozen", False):
+            # .exe
+            base_path = os.path.dirname(sys.executable)
+        else:
+            # .py
+            base_path = os.path.dirname(__file__)
+        return base_path
 
     def generate_document(self, document_type="見積書"):
-        """
-        入力内容をもとにExcelファイルを生成し、PDFに変換して保存する。
-        Args:
-            document_type (str): 書類の種類（見積書・請求書・領収書）
-        """
+        """入力内容をもとにExcelファイルを生成し、PDFに変換して保存する。"""
         # テーブルと入力フィールドの取得
         if document_type == "見積書":
             table = self.estimate_table
@@ -533,18 +498,14 @@ class MainWindow(QMainWindow):
         print(f"PDFが正常に保存されました: {final_pdf_path}")
 
     def add_settings_button(self):
-        """
-        自社情報変更ボタンを追加する（未使用）。
-        """
+        """自社情報変更ボタンを画面に追加する。"""
         # 自社情報変更ボタン
         settings_button = QPushButton("自社情報を変更")
         settings_button.clicked.connect(self.open_settings_dialog)
         self.layout().addWidget(settings_button)
 
     def update_company_info(self):
-        """
-        データベースから自社情報を再取得し、インスタンス変数を更新する。
-        """
+        """データベースから自社情報を再取得し、インスタンス変数を更新する。"""
         self.company_info = self.db_manager.get_company_info()
         if self.company_info:
             logging.debug("自社情報が更新されました:")
@@ -554,9 +515,7 @@ class MainWindow(QMainWindow):
             logging.debug("自社情報の更新に失敗しました: データベースから情報を取得できませんでした。")
 
     def open_settings_dialog(self):
-        """
-        自社情報設定ダイアログを開く。
-        """
+        """自社情報設定ダイアログを表示し、既存情報を入力欄に反映する。"""
         dialog = QDialog(self)
         dialog.setWindowTitle("自社情報設定")
         layout = QFormLayout(dialog)
@@ -637,9 +596,7 @@ class MainWindow(QMainWindow):
         account_number_field,
         account_holder_name_field
     ):
-        """
-        入力された自社情報をデータベースに保存する。
-        """
+        """自社情報設定ダイアログで入力された内容をデータベースに保存する。"""
         # 自社情報を保存する処理
         new_info = {
             "company_name": company_name_field.text(),
@@ -658,23 +615,19 @@ class MainWindow(QMainWindow):
         dialog.accept()
 
     def closeEvent(self, event):
-        """
-        アプリ終了時にデータベース接続を閉じる。
-        """
+        """アプリ終了時にデータベース接続を閉じる。"""
         # アプリ終了時にデータベース接続を閉じる
         self.db_manager.close()
         event.accept()
 
     def exit_process(self):
-        """
-        アプリケーションを終了する。
-        """
+        """アプリケーションを終了する処理。"""
         # アプリケーションを終了する処理
         self.db_manager.close()
         self.close()
 
 if __name__ == "__main__":
-    # アプリケーションのエントリーポイント
+    # アプリケーションのエントリーポイント。自社情報がなければ設定ダイアログを表示。
     db_manager = DatabaseManager()
     company_info = db_manager.get_company_info()
     if company_info:
@@ -688,156 +641,3 @@ if __name__ == "__main__":
         window.open_settings_dialog()  # 自社情報がなければ設定ウィンドウを開く
     window.show()
     sys.exit(app.exec_())
-
-#from db import DatabaseManager
-
-def save_company_info():
-    db = DatabaseManager()
-
-    # 自社情報の入力例
-    company_info = {
-        "company_name": "株式会社サンプル",
-        "postal_code": "123-4567",
-        "address": "東京都新宿区",
-        "address_detail": "1-2-3 サンプルビル",
-        "phone_number": "03-1234-5678",
-        "contact_person": "山田 太郎",
-        "account_type": "普通",
-        "bank_branch": "新宿支店",
-        "account_number": "1234567",
-        "account_name": "カ）サンプル"
-    }
-
-    # データベースに保存
-    db.add_company_info(company_info)
-    print("自社情報を保存しました。")
-
-    # 保存した情報を取得して表示
-    saved_info = db.get_company_info()
-    print("保存された自社情報:", saved_info)
-
-import sqlite3
-import logging
-
-class DatabaseManager:
-    def __init__(self, db_name="documents.db"):
-        self.db_name = db_name
-        self.conn = None
-
-    def connect(self):
-        """データベースに接続し、カーソルを作成する"""
-        try:
-            self.conn = sqlite3.connect(self.db_name)
-            self.cursor = self.conn.cursor()
-            logging.info("Database connection established.")
-        except sqlite3.Error as e:
-            logging.error(f"Database connection error: {e}")
-            raise
-
-    def close(self):
-        """データベース接続を閉じる"""
-        if self.conn:
-            self.conn.close()
-            logging.info("Database connection closed.")
-
-    def create_table(self):
-        """テーブルを作成する"""
-        try:
-            self.connect()
-            self.cursor.execute('''
-                CREATE TABLE IF NOT EXISTS company_info (
-                    id INTEGER PRIMARY KEY,
-                    company_name TEXT,
-                    postal_code TEXT,
-                    address TEXT,
-                    address_detail TEXT,
-                    phone_number TEXT,
-                    contact_person TEXT,
-                    account_type TEXT,
-                    bank_branch TEXT,
-                    account_number TEXT,
-                    account_name TEXT
-                )
-            ''')
-            self.conn.commit()  # テーブル作成をコミット 
-            logging.info("Table 'company_info' created (if not exists).")
-        except sqlite3.Error as e:
-            logging.error(f"Table creation error: {e}")
-            raise
-        finally:
-            self.close()
-
-    def add_company_info(self, info):
-        """自社情報を追加する"""
-        try:
-            self.connect()
-            self.cursor.execute('''
-                INSERT INTO company_info (company_name, postal_code, address, address_detail,
-                                        phone_number, contact_person, account_type, bank_branch,
-                                        account_number, account_name)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (info.get("company_name"), info.get("postal_code"), info.get("address"),
-                  info.get("address_detail"), info.get("phone_number"), info.get("contact_person"),
-                  info.get("account_type"), info.get("bank_branch"), info.get("account_number"),
-                  info.get("account_name")))
-            self.conn.commit()  # データ追加をコミット 
-            logging.info("Company info added.")
-        except sqlite3.Error as e:
-            logging.error(f"Error adding company info: {e}")
-            raise
-        finally:
-            self.close()
-
-    def get_company_info(self):
-        """自社情報を取得する"""
-        try:
-            self.connect()
-            self.cursor.execute("SELECT * FROM company_info LIMIT 1")
-            row = self.cursor.fetchone()
-            if row:
-                columns = [column[0] for column in self.cursor.description]
-                return dict(zip(columns, row))
-            return None
-        except sqlite3.Error as e:
-            logging.error(f"Error getting company info: {e}")
-            raise
-        finally:
-            self.close()
-
-    def update_company_info(self, info):
-        """自社情報を更新する"""
-        try:
-            self.connect()
-            self.cursor.execute('''
-                UPDATE company_info SET
-                    company_name = ?, postal_code = ?, address = ?, address_detail = ?,
-                    phone_number = ?, contact_person = ?, account_type = ?, bank_branch = ?,
-                    account_number = ?, account_name = ?
-                WHERE id = 1
-            ''', (info.get("company_name"), info.get("postal_code"), info.get("address"),
-                  info.get("address_detail"), info.get("phone_number"), info.get("contact_person"),
-                  info.get("account_type"), info.get("bank_branch"), info.get("account_number"),
-                  info.get("account_name")))
-            self.conn.commit()  # データ更新をコミット 
-            logging.info("Company info updated.")
-        except sqlite3.Error as e:
-            logging.error(f"Error updating company info: {e}")
-            raise
-        finally:
-            self.close()
-
-    def delete_company_info(self):
-        """自社情報を削除する (通常は使用しない)"""
-        try:
-            self.connect()
-            self.cursor.execute("DELETE FROM company_info WHERE id = 1")
-            self.conn.commit()  # データ削除をコミット 
-            logging.warning("Company info deleted.")
-        except sqlite3.Error as e:
-            logging.error(f"Error deleting company info: {e}")
-            raise
-        finally:
-            self.close()
-
-if __name__ == "__main__":
-    save_company_info()
