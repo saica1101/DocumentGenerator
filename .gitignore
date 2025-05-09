@@ -1,5 +1,10 @@
+.gitignore
 DocumentGenerator/documents.db
 documents.db
 DocumentGenerator/DocumentGenerator.zip
 DocumentGenerator/main.exe
 DocumentGenerator/*.*
+DocumentGenerator/Templates/*.*
+DocumentGenerator/見積書/*.*
+DocumentGenerator/請求書/*.*
+DocumentGenerator/領収書/*.*

@@ -1,15 +1,17 @@
 import sys
-import os
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLineEdit, QPushButton, QDateEdit, QFormLayout, QDialog, QStackedWidget, QTableWidget, QTextEdit # type: ignore
-from PyQt5.QtCore import QDate, QTime # type: ignore
-import shutil
-import openpyxl # type: ignore
-from openpyxl.styles import Alignment # type: ignore
-from openpyxl import load_workbook # type: ignore
-import tempfile
 import logging
-import subprocess
+from PyQt5.QtWidgets import QApplication, QMainWindow, QStackedWidget, QWidget, QVBoxLayout, QPushButton, QLineEdit, QFormLayout, QTableWidget, QTextEdit, QDateEdit, QDialog
+from PyQt5.QtCore import QDate, QTime
 import sqlite3
+import os
+import tempfile
+import shutil
+import subprocess
+from openpyxl import load_workbook
+from openpyxl.styles import Alignment
+import openpyxl
+import openpyxl.styles.alignment
+import openpyxl.styles
 
 # ログ設定
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
